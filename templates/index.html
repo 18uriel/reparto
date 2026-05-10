@@ -4,85 +4,260 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reparto de Regalos – Día de la Madre</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --rosa: #e91e8c;
-    --rosa-suave: #fce4f3;
-    --rosa-borde: #f48fb1;
-    --verde: #1b5e20;
-    --verde-suave: #e8f5e9;
-    --rojo: #b71c1c;
-    --rojo-suave: #ffebee;
-    --gris: #f5f5f5;
-    --texto: #212121;
-    --sombra: 0 2px 12px rgba(0,0,0,.12);
+    --rosa:        #d4005a;
+    --rosa-vivo:   #ff1a75;
+    --rosa-suave:  #fff0f6;
+    --rosa-borde:  #ffb3d1;
+    --verde:       #006644;
+    --verde-suave: #e6f4ee;
+    --rojo:        #c0001a;
+    --rojo-suave:  #fff0f2;
+    --texto:       #1a0a10;
+    --texto-sub:   #7a5060;
+    --fondo:       #fdf5f8;
+    --blanco:      #ffffff;
+    --sombra-s:    0 1px 4px rgba(180,0,80,.08);
+    --sombra-m:    0 4px 24px rgba(180,0,80,.10);
+    --sombra-l:    0 12px 48px rgba(180,0,80,.14);
+    --radio:       18px;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #fdf0f8; color: var(--texto); min-height: 100vh; }
-  header { background: var(--rosa); color: white; text-align: center; padding: 1.2rem 1rem; box-shadow: var(--sombra); }
-  header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: .5px; }
-  header p { font-size: .9rem; opacity: .85; margin-top: 4px; }
-  .stats { display: flex; gap: 12px; padding: 1rem; justify-content: center; flex-wrap: wrap; }
-  .stat-card { background: white; border-radius: 12px; padding: .7rem 1.4rem; text-align: center; box-shadow: var(--sombra); min-width: 120px; }
-  .stat-card .num { font-size: 2rem; font-weight: 700; color: var(--rosa); }
-  .stat-card .lbl { font-size: .75rem; color: #777; margin-top: 2px; }
-  .main { max-width: 680px; margin: 0 auto; padding: 0 1rem 2rem; }
-  .card { background: white; border-radius: 16px; padding: 1.5rem; box-shadow: var(--sombra); margin-bottom: 1rem; }
-  .card h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 1rem; color: var(--rosa); display: flex; align-items: center; gap: 8px; }
-  label { display: block; font-size: .82rem; color: #555; margin-bottom: 4px; font-weight: 500; }
-  input[type=text] { width: 100%; padding: 11px 14px; border: 1.5px solid #ddd; border-radius: 10px; font-size: 1rem; transition: border .2s; outline: none; }
-  input[type=text]:focus { border-color: var(--rosa); box-shadow: 0 0 0 3px rgba(233,30,140,.1); }
-  .field { margin-bottom: .9rem; }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .btn { width: 100%; padding: 13px; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all .15s; letter-spacing: .3px; }
-  .btn-rosa { background: var(--rosa); color: white; }
-  .btn-rosa:hover:not(:disabled) { background: #c2185b; }
-  .btn-rosa:disabled { background: #ccc; cursor: not-allowed; }
-  .btn-gris { background: #eee; color: #555; margin-top: 8px; }
-  .btn-gris:hover { background: #ddd; }
-  #resultado-dni { margin-top: 10px; display: none; }
-  .persona-card { border-radius: 12px; padding: 1rem; display: flex; align-items: center; gap: 14px; }
-  .persona-card.libre { background: var(--verde-suave); border: 1.5px solid #a5d6a7; }
-  .persona-card.ocupada { background: var(--rojo-suave); border: 1.5px solid #ef9a9a; }
-  .avatar { width: 52px; height: 52px; border-radius: 50%; background: var(--rosa); color: white; font-size: 1.3rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .persona-info strong { font-size: 1.05rem; display: block; }
-  .persona-info span { font-size: .85rem; color: #555; }
-  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 700; margin-top: 5px; }
-  .badge.ok { background: var(--verde); color: white; }
-  .badge.ya { background: var(--rojo); color: white; }
-  .badge.no-recibio { background: var(--rojo); color: white; }
-  .alerta { padding: 1rem 1.2rem; border-radius: 10px; font-size: .95rem; font-weight: 500; margin-top: 10px; display: none; }
-  .alerta.exito { background: var(--verde-suave); border: 1.5px solid #81c784; color: var(--verde); }
-  .alerta.error { background: var(--rojo-suave); border: 1.5px solid #e57373; color: var(--rojo); }
-  .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,.4); border-top-color: white; border-radius: 50%; animation: spin .6s linear infinite; vertical-align: -4px; margin-right: 6px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .search-bar { padding: 9px 12px; width: 100%; border: 1.5px solid #ddd; border-radius: 10px; font-size: .9rem; margin-bottom: .8rem; outline: none; }
-  .search-bar:focus { border-color: var(--rosa); }
-  table { width: 100%; border-collapse: collapse; font-size: .88rem; }
-  thead tr { background: var(--rosa-suave); }
-  th { padding: 9px 10px; text-align: left; font-weight: 600; color: var(--rosa); font-size: .8rem; }
-  td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; }
-  tr:hover td { background: #fafafa; }
-  .pill { padding: 2px 9px; border-radius: 20px; font-size: .75rem; font-weight: 700; }
-  .pill.entregado { background: var(--verde-suave); color: var(--verde); }
-  .pill.pendiente { background: #ffebee; color: var(--rojo); }
-  .no-data { text-align: center; color: #aaa; padding: 2rem; }
-  .tabs { display: flex; background: white; border-radius: 14px; box-shadow: var(--sombra); overflow: hidden; margin-bottom: 1rem; }
-  .tab-btn { flex: 1; padding: 13px; border: none; background: transparent; cursor: pointer; font-size: .88rem; font-weight: 600; color: #888; transition: all .15s; border-bottom: 3px solid transparent; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--fondo);
+    color: var(--texto);
+    min-height: 100vh;
+  }
+
+  header {
+    background: linear-gradient(135deg, #b8004e 0%, #e9006f 55%, #ff5fa0 100%);
+    color: white;
+    text-align: center;
+    padding: 2.4rem 1rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+  header .eyebrow {
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    opacity: .75;
+    margin-bottom: .5rem;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.5rem, 5vw, 2.4rem);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -.5px;
+    text-shadow: 0 2px 12px rgba(0,0,0,.15);
+  }
+  header .sub {
+    font-size: .82rem;
+    opacity: .8;
+    margin-top: .5rem;
+    font-weight: 300;
+    letter-spacing: .5px;
+  }
+  .flor { font-size: 1.6rem; display: block; margin-bottom: .4rem; animation: float 3s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+
+  .stats {
+    display: flex;
+    gap: 10px;
+    padding: 1.4rem 1rem .6rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .stat-card {
+    background: var(--blanco);
+    border-radius: var(--radio);
+    padding: .9rem 1.6rem;
+    text-align: center;
+    box-shadow: var(--sombra-m);
+    min-width: 110px;
+    flex: 1;
+    max-width: 160px;
+    border-top: 3px solid var(--rosa);
+    transition: transform .2s, box-shadow .2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: var(--sombra-l); }
+  .stat-card .num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--rosa);
+    line-height: 1;
+  }
+  .stat-card .lbl { font-size: .7rem; color: var(--texto-sub); margin-top: 4px; font-weight: 500; letter-spacing: .5px; text-transform: uppercase; }
+
+  .main { max-width: 660px; margin: 0 auto; padding: 0 1rem 3rem; }
+
+  .tabs {
+    display: flex;
+    background: var(--blanco);
+    border-radius: var(--radio);
+    box-shadow: var(--sombra-m);
+    overflow: hidden;
+    margin-bottom: 1.2rem;
+    border: 1.5px solid rgba(212,0,90,.1);
+  }
+  .tab-btn {
+    flex: 1; padding: 14px 10px; border: none; background: transparent;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    font-size: .85rem; font-weight: 600; color: var(--texto-sub);
+    transition: all .2s; border-bottom: 3px solid transparent;
+  }
   .tab-btn.active { color: var(--rosa); border-bottom-color: var(--rosa); background: var(--rosa-suave); }
-  @media (max-width: 480px) { .row { grid-template-columns: 1fr; } header h1 { font-size: 1.2rem; } }
+
+  .card {
+    background: var(--blanco);
+    border-radius: var(--radio);
+    padding: 1.6rem;
+    box-shadow: var(--sombra-m);
+    margin-bottom: 1rem;
+    border: 1.5px solid rgba(212,0,90,.07);
+  }
+  .card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1.1rem;
+    color: var(--rosa);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  label { display: block; font-size: .78rem; color: var(--texto-sub); margin-bottom: 5px; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; }
+  input[type=text] {
+    width: 100%; padding: 12px 16px;
+    border: 2px solid #f0d8e4;
+    border-radius: 12px; font-size: 1rem;
+    font-family: 'DM Sans', sans-serif;
+    transition: border .2s, box-shadow .2s; outline: none;
+    background: #fffafe;
+  }
+  input[type=text]:focus { border-color: var(--rosa); box-shadow: 0 0 0 4px rgba(212,0,90,.08); background: white; }
+  .field { margin-bottom: 1rem; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .btn {
+    width: 100%; padding: 14px; border: none; border-radius: 12px;
+    font-size: .95rem; font-weight: 700; cursor: pointer;
+    transition: all .15s; letter-spacing: .3px;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-rosa {
+    background: linear-gradient(135deg, var(--rosa) 0%, var(--rosa-vivo) 100%);
+    color: white; box-shadow: 0 4px 16px rgba(212,0,90,.35);
+  }
+  .btn-rosa:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(212,0,90,.45); }
+  .btn-rosa:active:not(:disabled) { transform: translateY(0); }
+  .btn-rosa:disabled { background: #ddd; box-shadow: none; cursor: not-allowed; color: #aaa; }
+  .btn-gris { background: #f3ecef; color: var(--texto-sub); margin-top: 8px; }
+  .btn-gris:hover { background: #e8dde2; }
+
+  #resultado-dni { margin-top: 12px; display: none; }
+  .persona-card {
+    border-radius: 14px; padding: 1.1rem 1.2rem;
+    display: flex; align-items: center; gap: 14px;
+    transition: all .3s;
+  }
+  .persona-card.libre { background: var(--verde-suave); border: 2px solid #a8d5c0; }
+  .persona-card.ocupada { background: var(--rojo-suave); border: 2px solid #f5b3be; }
+  .avatar {
+    width: 54px; height: 54px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--rosa), var(--rosa-vivo));
+    color: white; font-family: 'Playfair Display', serif;
+    font-size: 1.3rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    box-shadow: 0 3px 12px rgba(212,0,90,.3);
+  }
+  .persona-info strong { font-size: 1rem; font-weight: 600; display: block; line-height: 1.3; }
+  .persona-info .sub-info { font-size: .78rem; color: var(--texto-sub); margin-top: 2px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 12px; border-radius: 20px;
+    font-size: .72rem; font-weight: 700; margin-top: 6px;
+    letter-spacing: .3px; text-transform: uppercase;
+  }
+  .badge.ok { background: var(--verde); color: white; }
+  .badge.no-recibio { background: var(--rojo); color: white; }
+
+  .alerta {
+    padding: 1rem 1.2rem; border-radius: 12px;
+    font-size: .9rem; font-weight: 500; margin-top: 10px; display: none;
+    border-left: 4px solid;
+  }
+  .alerta.exito { background: var(--verde-suave); border-color: var(--verde); color: var(--verde); }
+  .alerta.error { background: var(--rojo-suave); border-color: var(--rojo); color: var(--rojo); }
+
+  .spinner {
+    display: inline-block; width: 16px; height: 16px;
+    border: 2.5px solid rgba(255,255,255,.4); border-top-color: white;
+    border-radius: 50%; animation: spin .6s linear infinite;
+    vertical-align: -3px; margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .search-bar {
+    padding: 10px 14px; width: 100%;
+    border: 2px solid #f0d8e4; border-radius: 12px;
+    font-size: .9rem; margin-bottom: 1rem; outline: none;
+    font-family: 'DM Sans', sans-serif; background: #fffafe;
+  }
+  .search-bar:focus { border-color: var(--rosa); }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  thead tr { background: var(--rosa-suave); }
+  th { padding: 10px 12px; text-align: left; font-weight: 700; color: var(--rosa); font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; }
+  td { padding: 10px 12px; border-bottom: 1px solid #f5eaf0; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fff8fb; }
+  .pill { padding: 3px 10px; border-radius: 20px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; }
+  .pill.entregado { background: var(--verde-suave); color: var(--verde); }
+  .pill.pendiente { background: var(--rojo-suave); color: var(--rojo); }
+  .no-data { text-align: center; color: #c0a0b0; padding: 2.5rem; font-size: .9rem; }
+
+  .info-card {
+    background: linear-gradient(135deg, #fff0f6, #ffe8f2);
+    border: 1.5px dashed var(--rosa-borde);
+    border-radius: var(--radio);
+    padding: 1.2rem 1.4rem;
+    font-size: .82rem; color: var(--texto-sub); line-height: 1.8;
+    margin-bottom: 1rem;
+  }
+  .info-card strong { color: var(--rosa); }
+
+  @media (max-width: 480px) {
+    .row { grid-template-columns: 1fr; }
+    header h1 { font-size: 1.35rem; }
+    .stat-card { min-width: 90px; padding: .7rem 1rem; }
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>🌸 Reparto de Regalos – Día de la Madre</h1>
-  <p>Registro y control de entregas · 2025</p>
+  <span class="flor">🌸</span>
+  <div class="eyebrow">Municipalidad Distrital de Santa Rosa · Melgar</div>
+  <h1>Reparto de Regalos<br>Día de la Madre</h1>
+  <div class="sub">Registro y control de entregas · 2026</div>
 </header>
 
 <div class="stats">
-  <div class="stat-card"><div class="num" id="s-total">–</div><div class="lbl">Total registradas</div></div>
-  <div class="stat-card"><div class="num" id="s-entregados">–</div><div class="lbl">Regalos entregados</div></div>
+  <div class="stat-card"><div class="num" id="s-total">–</div><div class="lbl">Registradas</div></div>
+  <div class="stat-card"><div class="num" id="s-entregados">–</div><div class="lbl">Entregados</div></div>
   <div class="stat-card"><div class="num" id="s-pendientes">–</div><div class="lbl">Pendientes</div></div>
 </div>
 
@@ -114,15 +289,16 @@
         </div>
       </div>
       <div id="alerta-registro" class="alerta"></div>
-      <button class="btn btn-rosa" id="btn-entregar" style="margin-top:12px; display:none" onclick="registrarEntrega()">
+      <button class="btn btn-rosa" id="btn-entregar" style="margin-top:14px; display:none" onclick="registrarEntrega()">
         🎁 Confirmar entrega de regalo
       </button>
       <button class="btn btn-gris" id="btn-limpiar" style="display:none" onclick="limpiar()">
         ↩ Nueva consulta
       </button>
     </div>
-    <div class="card" style="font-size:.83rem; color:#888; line-height:1.7;">
-      <strong style="color:var(--rosa)">ℹ ¿Cómo funciona?</strong><br>
+
+    <div class="info-card">
+      <strong>ℹ ¿Cómo funciona?</strong><br>
       1. Ingresa el DNI de la beneficiaria.<br>
       2. El sistema consulta la base de datos y RENIEC automáticamente.<br>
       3. Presiona <strong>Confirmar entrega</strong>. Si ya recibió un regalo, el sistema lo avisará.
@@ -134,7 +310,7 @@
       <h2>📋 Todas las beneficiarias</h2>
       <input type="text" class="search-bar" id="buscador-lista" placeholder="🔍 Buscar por nombre o DNI..." oninput="filtrarLista()" />
       <div id="tabla-container"><p class="no-data">Cargando...</p></div>
-      <button class="btn btn-gris" style="margin-top:.8rem" onclick="cargarLista()">↻ Actualizar</button>
+      <button class="btn btn-gris" style="margin-top:.8rem" onclick="cargarLista()">↻ Actualizar lista</button>
     </div>
   </div>
 </div>
@@ -168,9 +344,7 @@ function onDniInput() {
   document.getElementById('dni-input').value = val;
   clearTimeout(dniTimeout);
   resetUI();
-  if (val.length === 8) {
-    dniTimeout = setTimeout(() => consultarDNI(val), 350);
-  }
+  if (val.length === 8) dniTimeout = setTimeout(() => consultarDNI(val), 350);
 }
 
 function resetUI() {
@@ -202,20 +376,17 @@ function mostrarPersona(dni, nombres, apellidos, yaRecibio, fechaEntrega, fuente
   const rdiv = document.getElementById('resultado-dni');
   rdiv.style.display = 'block';
   const iniciales = iniciales2(nombres, apellidos);
-
-  // Verde si YA RECIBIÓ, Rojo si NO HA RECIBIDO
   const badgeClass = yaRecibio ? 'ok' : 'no-recibio';
-  const badgeTexto = yaRecibio
-    ? '✅ YA RECIBIÓ EL REGALO – ' + fechaEntrega
-    : '❌ No ha recibido regalo';
+  const badgeTexto = yaRecibio ? '✅ Ya recibió el regalo' : '❌ No ha recibido regalo';
+  const fechaTexto = yaRecibio && fechaEntrega ? ` · ${fechaEntrega.split(' ')[0]}` : '';
 
   rdiv.innerHTML = `
     <div class="persona-card ${yaRecibio ? 'ocupada' : 'libre'}">
       <div class="avatar">${iniciales}</div>
       <div class="persona-info">
         <strong>${nombres} ${apellidos}</strong>
-        <span>DNI: ${dni} · ${fuente === 'reniec' ? '✓ RENIEC' : '📂 Base de datos'}</span>
-        <span class="badge ${badgeClass}">${badgeTexto}</span>
+        <div class="sub-info">DNI: ${dni} · ${fuente === 'reniec' ? '✓ RENIEC' : '📂 Base de datos'}</div>
+        <span class="badge ${badgeClass}">${badgeTexto}${fechaTexto}</span>
       </div>
     </div>`;
 
@@ -224,7 +395,7 @@ function mostrarPersona(dni, nombres, apellidos, yaRecibio, fechaEntrega, fuente
   document.getElementById('campos-nombre').style.display = 'grid';
 
   if (yaRecibio) {
-    mostrarAlerta('error', `⚠ ${nombres} ${apellidos} ya recibió su regalo el ${fechaEntrega}. NO se puede entregar doble.`);
+    mostrarAlerta('error', `⚠ ${nombres} ${apellidos} ya recibió su regalo. NO se puede entregar doble.`);
     document.getElementById('btn-limpiar').style.display = 'block';
   } else {
     document.getElementById('btn-entregar').style.display = 'block';
@@ -235,46 +406,34 @@ function mostrarPersona(dni, nombres, apellidos, yaRecibio, fechaEntrega, fuente
 async function consultarDNI(dni) {
   const rdiv = document.getElementById('resultado-dni');
   rdiv.style.display = 'block';
-  rdiv.innerHTML = '<p style="color:#999;font-size:.9rem;">🔄 Consultando...</p>';
+  rdiv.innerHTML = '<p style="color:#c0749a;font-size:.88rem;padding:.5rem 0;">🔄 Consultando...</p>';
 
-  // 1. Primero buscar en BD local
+  // 1. Primero BD local
   try {
     const r = await fetch('/api/consultar_dni/' + dni);
     const d = await r.json();
-    if (r.ok) {
-      mostrarPersona(d.dni, d.nombres, d.apellidos, d.ya_recibio, d.fecha_entrega, d.fuente);
-      return;
-    }
+    if (r.ok) { mostrarPersona(d.dni, d.nombres, d.apellidos, d.ya_recibio, d.fecha_entrega, d.fuente); return; }
   } catch(e) {}
 
-  // 2. Si no está en BD, consultar RENIEC
+  // 2. RENIEC
   try {
     const resp = await fetch(`https://apiperu.dev/api/dni/${dni}`, {
-      headers: {
-        'Authorization': `Bearer ${APIPERU_TOKEN}`,
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
+      headers: { 'Authorization': `Bearer ${APIPERU_TOKEN}`, 'Accept': 'application/json', 'Content-Type': 'application/json' }
     });
     if (resp.ok) {
       const json = await resp.json();
       const info = json.data || json;
       const nombres   = info.nombres || info.nombre || '';
       const apellidos = `${info.apellido_paterno||''} ${info.apellido_materno||''}`.trim();
-      if (nombres) {
-        mostrarPersona(dni, nombres, apellidos, false, null, 'reniec');
-        return;
-      }
+      if (nombres) { mostrarPersona(dni, nombres, apellidos, false, null, 'reniec'); return; }
     }
-  } catch(e) {
-    console.log('RENIEC directo:', e.message);
-  }
+  } catch(e) {}
 
-  // 3. No encontrado → manual
-  rdiv.innerHTML = `<p style="color:#e65100;font-size:.9rem;">ℹ DNI no encontrado en RENIEC. Ingresa el nombre manualmente.</p>`;
+  // 3. Manual
+  rdiv.innerHTML = `<p style="color:#c05030;font-size:.85rem;padding:.5rem 0;">ℹ DNI no encontrado en RENIEC. Ingresa el nombre manualmente.</p>`;
   datosCargados = { dni };
   document.getElementById('campos-nombre').style.display = 'grid';
-  document.getElementById('nombres-input').value   = '';
+  document.getElementById('nombres-input').value = '';
   document.getElementById('apellidos-input').value = '';
   document.getElementById('nombres-input').focus();
   document.getElementById('btn-entregar').style.display = 'block';
@@ -286,12 +445,9 @@ async function registrarEntrega() {
   const dni       = document.getElementById('dni-input').value.trim();
   const nombres   = document.getElementById('nombres-input').value.trim().toUpperCase();
   const apellidos = document.getElementById('apellidos-input').value.trim().toUpperCase();
-
   if (!nombres) { mostrarAlerta('error', 'Por favor ingresa el nombre.'); return; }
-
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Registrando...';
-
   try {
     const r = await fetch('/api/registrar', {
       method: 'POST',
@@ -338,29 +494,28 @@ async function cargarLista() {
 
 function filtrarLista() {
   const q = document.getElementById('buscador-lista').value.toLowerCase();
-  const filtrado = listaCompleta.filter(p =>
+  renderTabla(listaCompleta.filter(p =>
     p.dni.includes(q) ||
     (p.nombres||'').toLowerCase().includes(q) ||
     (p.apellidos||'').toLowerCase().includes(q)
-  );
-  renderTabla(filtrado);
+  ));
 }
 
 function renderTabla(rows) {
   if (!rows.length) {
-    document.getElementById('tabla-container').innerHTML = '<p class="no-data">No hay registros.</p>';
+    document.getElementById('tabla-container').innerHTML = '<p class="no-data">No hay registros aún.</p>';
     return;
   }
   document.getElementById('tabla-container').innerHTML = `
     <table>
-      <thead><tr><th>DNI</th><th>Nombres y apellidos</th><th>Estado</th><th>Fecha entrega</th></tr></thead>
+      <thead><tr><th>DNI</th><th>Nombre completo</th><th>Estado</th><th>Fecha</th></tr></thead>
       <tbody>
         ${rows.map(p => `
           <tr>
             <td><strong>${p.dni}</strong></td>
             <td>${p.nombres} ${p.apellidos}</td>
             <td><span class="pill ${p.ya_recibio ? 'entregado' : 'pendiente'}">${p.ya_recibio ? '✅ Entregado' : '❌ Pendiente'}</span></td>
-            <td style="font-size:.8rem;color:#777">${p.fecha_entrega || '–'}</td>
+            <td style="font-size:.78rem;color:#a07080">${p.fecha_entrega ? p.fecha_entrega.split(' ')[0] : '–'}</td>
           </tr>`).join('')}
       </tbody>
     </table>`;
