@@ -7,9 +7,10 @@ app = Flask(__name__)
 
 DB_CONFIG = {
     "host":     os.getenv("DB_HOST",     "localhost"),
+    "port":     int(os.getenv("DB_PORT", 3306)),
     "user":     os.getenv("DB_USER",     "root"),
     "password": os.getenv("DB_PASSWORD", ""),
-    "database": os.getenv("DB_NAME",     "reparto_regalos"),
+    "database": os.getenv("DB_NAME",     "railway"),
 }
 
 APIPERU_TOKEN = os.getenv("APIPERU_TOKEN", "")
