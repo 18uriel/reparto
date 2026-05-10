@@ -50,6 +50,7 @@
   .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 700; margin-top: 5px; }
   .badge.ok { background: var(--verde); color: white; }
   .badge.ya { background: var(--rojo); color: white; }
+  .badge.no-recibio { background: var(--rojo); color: white; }
   .alerta { padding: 1rem 1.2rem; border-radius: 10px; font-size: .95rem; font-weight: 500; margin-top: 10px; display: none; }
   .alerta.exito { background: var(--verde-suave); border: 1.5px solid #81c784; color: var(--verde); }
   .alerta.error { background: var(--rojo-suave); border: 1.5px solid #e57373; color: var(--rojo); }
@@ -64,7 +65,7 @@
   tr:hover td { background: #fafafa; }
   .pill { padding: 2px 9px; border-radius: 20px; font-size: .75rem; font-weight: 700; }
   .pill.entregado { background: var(--verde-suave); color: var(--verde); }
-  .pill.pendiente { background: #fff8e1; color: #e65100; }
+  .pill.pendiente { background: #ffebee; color: var(--rojo); }
   .no-data { text-align: center; color: #aaa; padding: 2rem; }
   .tabs { display: flex; background: white; border-radius: 14px; box-shadow: var(--sombra); overflow: hidden; margin-bottom: 1rem; }
   .tab-btn { flex: 1; padding: 13px; border: none; background: transparent; cursor: pointer; font-size: .88rem; font-weight: 600; color: #888; transition: all .15s; border-bottom: 3px solid transparent; }
@@ -123,7 +124,7 @@
     <div class="card" style="font-size:.83rem; color:#888; line-height:1.7;">
       <strong style="color:var(--rosa)">ℹ ¿Cómo funciona?</strong><br>
       1. Ingresa el DNI de la beneficiaria.<br>
-      2. El sistema consulta RENIEC y carga el nombre automáticamente.<br>
+      2. El sistema consulta la base de datos y RENIEC automáticamente.<br>
       3. Presiona <strong>Confirmar entrega</strong>. Si ya recibió un regalo, el sistema lo avisará.
     </div>
   </div>
@@ -201,20 +202,27 @@ function mostrarPersona(dni, nombres, apellidos, yaRecibio, fechaEntrega, fuente
   const rdiv = document.getElementById('resultado-dni');
   rdiv.style.display = 'block';
   const iniciales = iniciales2(nombres, apellidos);
+
+  // Verde si YA RECIBIÓ, Rojo si NO HA RECIBIDO
+  const badgeClass = yaRecibio ? 'ok' : 'no-recibio';
+  const badgeTexto = yaRecibio
+    ? '✅ YA RECIBIÓ EL REGALO – ' + fechaEntrega
+    : '❌ No ha recibido regalo';
+
   rdiv.innerHTML = `
     <div class="persona-card ${yaRecibio ? 'ocupada' : 'libre'}">
       <div class="avatar">${iniciales}</div>
       <div class="persona-info">
         <strong>${nombres} ${apellidos}</strong>
         <span>DNI: ${dni} · ${fuente === 'reniec' ? '✓ RENIEC' : '📂 Base de datos'}</span>
-        <span class="badge ${yaRecibio ? 'ya' : 'ok'}">
-          ${yaRecibio ? '⛔ YA RECIBIÓ EL REGALO – ' + fechaEntrega : '✅ No ha recibido regalo'}
-        </span>
+        <span class="badge ${badgeClass}">${badgeTexto}</span>
       </div>
     </div>`;
+
   document.getElementById('nombres-input').value   = nombres;
   document.getElementById('apellidos-input').value = apellidos;
   document.getElementById('campos-nombre').style.display = 'grid';
+
   if (yaRecibio) {
     mostrarAlerta('error', `⚠ ${nombres} ${apellidos} ya recibió su regalo el ${fechaEntrega}. NO se puede entregar doble.`);
     document.getElementById('btn-limpiar').style.display = 'block';
@@ -227,9 +235,19 @@ function mostrarPersona(dni, nombres, apellidos, yaRecibio, fechaEntrega, fuente
 async function consultarDNI(dni) {
   const rdiv = document.getElementById('resultado-dni');
   rdiv.style.display = 'block';
-  rdiv.innerHTML = '<p style="color:#999;font-size:.9rem;">🔄 Consultando RENIEC...</p>';
+  rdiv.innerHTML = '<p style="color:#999;font-size:.9rem;">🔄 Consultando...</p>';
 
-  // 1. Llamar a apiperu.dev DIRECTO desde el navegador
+  // 1. Primero buscar en BD local
+  try {
+    const r = await fetch('/api/consultar_dni/' + dni);
+    const d = await r.json();
+    if (r.ok) {
+      mostrarPersona(d.dni, d.nombres, d.apellidos, d.ya_recibio, d.fecha_entrega, d.fuente);
+      return;
+    }
+  } catch(e) {}
+
+  // 2. Si no está en BD, consultar RENIEC
   try {
     const resp = await fetch(`https://apiperu.dev/api/dni/${dni}`, {
       headers: {
@@ -251,16 +269,6 @@ async function consultarDNI(dni) {
   } catch(e) {
     console.log('RENIEC directo:', e.message);
   }
-
-  // 2. Si ya está en la BD local
-  try {
-    const r = await fetch('/api/consultar_dni/' + dni);
-    const d = await r.json();
-    if (r.ok) {
-      mostrarPersona(d.dni, d.nombres, d.apellidos, d.ya_recibio, d.fecha_entrega, d.fuente);
-      return;
-    }
-  } catch(e) {}
 
   // 3. No encontrado → manual
   rdiv.innerHTML = `<p style="color:#e65100;font-size:.9rem;">ℹ DNI no encontrado en RENIEC. Ingresa el nombre manualmente.</p>`;
@@ -351,7 +359,7 @@ function renderTabla(rows) {
           <tr>
             <td><strong>${p.dni}</strong></td>
             <td>${p.nombres} ${p.apellidos}</td>
-            <td><span class="pill ${p.ya_recibio ? 'entregado' : 'pendiente'}">${p.ya_recibio ? '✓ Entregado' : '⏳ Pendiente'}</span></td>
+            <td><span class="pill ${p.ya_recibio ? 'entregado' : 'pendiente'}">${p.ya_recibio ? '✅ Entregado' : '❌ Pendiente'}</span></td>
             <td style="font-size:.8rem;color:#777">${p.fecha_entrega || '–'}</td>
           </tr>`).join('')}
       </tbody>
