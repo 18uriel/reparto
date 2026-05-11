@@ -13,8 +13,7 @@ DB_CONFIG = {
     "database": os.getenv("DB_NAME",     "railway"),
 }
 
-APIPERU_TOKEN  = os.getenv("APIPERU_TOKEN", "")   # token de apiperu.dev (respaldo)
-APISNET_TOKEN  = os.getenv("APISNET_TOKEN", "")   # token de apis.net.pe (principal)
+APISNET_TOKEN = os.getenv("APISNET_TOKEN", "")  # token de decolecta.com (principal)
 
 def get_db():
     return mysql.connector.connect(**DB_CONFIG)
@@ -37,34 +36,34 @@ def consultar_dni(dni):
         cur.close(); db.close()
         if row:
             return jsonify({
-                "dni":          row["dni"],
-                "nombres":      row["nombres"],
-                "apellidos":    row["apellidos"],
-                "ya_recibio":   row["ya_recibio"] == 1,
+                "dni":           row["dni"],
+                "nombres":       row["nombres"],
+                "apellidos":     row["apellidos"],
+                "ya_recibio":    row["ya_recibio"] == 1,
                 "fecha_entrega": str(row["fecha_entrega"]) if row["fecha_entrega"] else None,
-                "fuente":       "base_de_datos"
+                "fuente":        "base_de_datos"
             })
     except Exception as e:
         return jsonify({"error": f"Error BD: {str(e)}"}), 500
 
-    # 2. Consultar RENIEC via apis.net.pe (PRINCIPAL)
+    # 2. Consultar RENIEC via decolecta.com
     try:
         resp = requests.get(
-            f"https://api.apis.net.pe/v2/dni?numero={dni}",
+            f"https://api.decolecta.com/v1/reniec/dni?numero={dni}",
             headers={
                 "Authorization": f"Bearer {APISNET_TOKEN}",
                 "Accept": "application/json"
             },
             timeout=8
         )
-        print("RENIEC [apis.net.pe] status:", resp.status_code)
-        print("RENIEC [apis.net.pe] response:", resp.text)
+        print("RENIEC [decolecta] status:", resp.status_code)
+        print("RENIEC [decolecta] response:", resp.text)
 
         if resp.status_code == 200:
             data      = resp.json()
-            nombres   = data.get("nombres", "")
-            ap_pat    = data.get("apellidoPaterno", "")
-            ap_mat    = data.get("apellidoMaterno", "")
+            nombres   = data.get("nombres", "") or data.get("nombre", "")
+            ap_pat    = data.get("apellidoPaterno", "") or data.get("apellido_paterno", "")
+            ap_mat    = data.get("apellidoMaterno", "") or data.get("apellido_materno", "")
             apellidos = f"{ap_pat} {ap_mat}".strip()
             if nombres:
                 return jsonify({
@@ -76,42 +75,10 @@ def consultar_dni(dni):
                     "fuente":        "reniec"
                 })
     except Exception as e:
-        print("Error apis.net.pe:", e)
-
-    # 3. Respaldo: Consultar RENIEC via apiperu.dev
-    try:
-        resp = requests.get(
-            f"https://apiperu.dev/api/dni/{dni}",
-            headers={
-                "Authorization": f"Bearer {APIPERU_TOKEN}",
-                "Accept": "application/json",
-                "Content-Type": "application/json"
-            },
-            timeout=8
-        )
-        print("RENIEC [apiperu.dev] status:", resp.status_code)
-        print("RENIEC [apiperu.dev] response:", resp.text)
-
-        if resp.status_code == 200:
-            data      = resp.json()
-            info      = data.get("data", data)
-            nombres   = info.get("nombres", "") or info.get("nombre", "")
-            ap_pat    = info.get("apellido_paterno", "") or info.get("apellidoPaterno", "")
-            ap_mat    = info.get("apellido_materno", "") or info.get("apellidoMaterno", "")
-            apellidos = f"{ap_pat} {ap_mat}".strip()
-            if nombres:
-                return jsonify({
-                    "dni":           dni,
-                    "nombres":       nombres,
-                    "apellidos":     apellidos,
-                    "ya_recibio":    False,
-                    "fecha_entrega": None,
-                    "fuente":        "reniec"
-                })
-    except Exception as e:
-        print("Error apiperu.dev:", e)
+        print("Error decolecta:", e)
 
     return jsonify({"error": "DNI no encontrado. Ingresa el nombre manualmente."}), 404
+
 
 @app.route("/api/registrar", methods=["POST"])
 def registrar():
@@ -156,6 +123,7 @@ def registrar():
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
+
 @app.route("/api/lista")
 def lista():
     try:
@@ -172,6 +140,7 @@ def lista():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @app.route("/api/stats")
 def stats():
     try:
@@ -187,6 +156,7 @@ def stats():
         return jsonify(row)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=False, port=int(os.environ.get("PORT", 5000)))
