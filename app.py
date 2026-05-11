@@ -13,7 +13,8 @@ DB_CONFIG = {
     "database": os.getenv("DB_NAME",     "railway"),
 }
 
-APIPERU_TOKEN = os.getenv("APIPERU_TOKEN", "")
+APIPERU_TOKEN  = os.getenv("APIPERU_TOKEN", "")   # token de apiperu.dev (respaldo)
+APISNET_TOKEN  = os.getenv("APISNET_TOKEN", "")   # token de apis.net.pe (principal)
 
 def get_db():
     return mysql.connector.connect(**DB_CONFIG)
@@ -46,7 +47,38 @@ def consultar_dni(dni):
     except Exception as e:
         return jsonify({"error": f"Error BD: {str(e)}"}), 500
 
-    # 2. Consultar RENIEC via apiperu.dev
+    # 2. Consultar RENIEC via apis.net.pe (PRINCIPAL)
+    try:
+        resp = requests.get(
+            f"https://api.apis.net.pe/v2/dni?numero={dni}",
+            headers={
+                "Authorization": f"Bearer {APISNET_TOKEN}",
+                "Accept": "application/json"
+            },
+            timeout=8
+        )
+        print("RENIEC [apis.net.pe] status:", resp.status_code)
+        print("RENIEC [apis.net.pe] response:", resp.text)
+
+        if resp.status_code == 200:
+            data      = resp.json()
+            nombres   = data.get("nombres", "")
+            ap_pat    = data.get("apellidoPaterno", "")
+            ap_mat    = data.get("apellidoMaterno", "")
+            apellidos = f"{ap_pat} {ap_mat}".strip()
+            if nombres:
+                return jsonify({
+                    "dni":           dni,
+                    "nombres":       nombres,
+                    "apellidos":     apellidos,
+                    "ya_recibio":    False,
+                    "fecha_entrega": None,
+                    "fuente":        "reniec"
+                })
+    except Exception as e:
+        print("Error apis.net.pe:", e)
+
+    # 3. Respaldo: Consultar RENIEC via apiperu.dev
     try:
         resp = requests.get(
             f"https://apiperu.dev/api/dni/{dni}",
@@ -57,27 +89,27 @@ def consultar_dni(dni):
             },
             timeout=8
         )
-        print("RENIEC status:", resp.status_code)
-        print("RENIEC response:", resp.text)
-        
+        print("RENIEC [apiperu.dev] status:", resp.status_code)
+        print("RENIEC [apiperu.dev] response:", resp.text)
+
         if resp.status_code == 200:
-            data = resp.json()
-            # apiperu.dev devuelve los datos dentro de "data"
-            info = data.get("data", data)
+            data      = resp.json()
+            info      = data.get("data", data)
             nombres   = info.get("nombres", "") or info.get("nombre", "")
             ap_pat    = info.get("apellido_paterno", "") or info.get("apellidoPaterno", "")
             ap_mat    = info.get("apellido_materno", "") or info.get("apellidoMaterno", "")
             apellidos = f"{ap_pat} {ap_mat}".strip()
-            return jsonify({
-                "dni":          dni,
-                "nombres":      nombres,
-                "apellidos":    apellidos,
-                "ya_recibio":   False,
-                "fecha_entrega": None,
-                "fuente":       "reniec"
-            })
+            if nombres:
+                return jsonify({
+                    "dni":           dni,
+                    "nombres":       nombres,
+                    "apellidos":     apellidos,
+                    "ya_recibio":    False,
+                    "fecha_entrega": None,
+                    "fuente":        "reniec"
+                })
     except Exception as e:
-        print("Error RENIEC:", e)
+        print("Error apiperu.dev:", e)
 
     return jsonify({"error": "DNI no encontrado. Ingresa el nombre manualmente."}), 404
 
