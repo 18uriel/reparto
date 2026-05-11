@@ -13,7 +13,7 @@ DB_CONFIG = {
     "database": os.getenv("DB_NAME",     "railway"),
 }
 
-APISNET_TOKEN = os.getenv("APISNET_TOKEN", "")  # token de decolecta.com (principal)
+APIPERU_TOKEN = os.getenv("APIPERU_TOKEN", "")  # token de apisperu.com
 
 def get_db():
     return mysql.connector.connect(**DB_CONFIG)
@@ -46,24 +46,24 @@ def consultar_dni(dni):
     except Exception as e:
         return jsonify({"error": f"Error BD: {str(e)}"}), 500
 
-    # 2. Consultar RENIEC via decolecta.com
+    # 2. Consultar RENIEC via apisperu.com
     try:
         resp = requests.get(
-            f"https://api.decolecta.com/v1/reniec/dni?numero={dni}",
+            f"https://dniruc.apisperu.com/api/v1/dni/{dni}",
             headers={
-                "Authorization": f"Bearer {APISNET_TOKEN}",
+                "Authorization": f"Bearer {APIPERU_TOKEN}",
                 "Accept": "application/json"
             },
             timeout=8
         )
-        print("RENIEC [decolecta] status:", resp.status_code)
-        print("RENIEC [decolecta] response:", resp.text)
+        print("RENIEC [apisperu.com] status:", resp.status_code)
+        print("RENIEC [apisperu.com] response:", resp.text)
 
         if resp.status_code == 200:
             data      = resp.json()
-            nombres   = data.get("nombres", "") or data.get("nombre", "")
-            ap_pat    = data.get("apellidoPaterno", "") or data.get("apellido_paterno", "")
-            ap_mat    = data.get("apellidoMaterno", "") or data.get("apellido_materno", "")
+            nombres   = data.get("nombres", "")
+            ap_pat    = data.get("apellidoPaterno", "")
+            ap_mat    = data.get("apellidoMaterno", "")
             apellidos = f"{ap_pat} {ap_mat}".strip()
             if nombres:
                 return jsonify({
@@ -75,7 +75,7 @@ def consultar_dni(dni):
                     "fuente":        "reniec"
                 })
     except Exception as e:
-        print("Error decolecta:", e)
+        print("Error apisperu.com:", e)
 
     return jsonify({"error": "DNI no encontrado. Ingresa el nombre manualmente."}), 404
 
